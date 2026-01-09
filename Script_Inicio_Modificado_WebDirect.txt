@@ -1,0 +1,80 @@
+## Script: Inicio de Sesión / Al Abrir (Refactorizado para WebDirect)
+## Mejoras: Control de contexto, eliminación de pausas inestables, manejo de barras en WebDirect
+
+# 1. Configuración Inicial y Seguridad
+Permitir abortar por el usuario [ Desactivado ]
+Establecer captura de errores [ Activado ]
+
+# 2. DEFINIR CONTEXTO (Crucial para corregir el bug de $$Semestre)
+#    Primero vamos a la presentación de "Ciclos" para asegurar que la variable se calcule con datos válidos.
+Ir a la presentación [ "Ciclos" ] 
+#    (Ajusta el nombre de la presentación si es necesario, ej. "Ciclos (a843249)")
+
+# 3. Configuración para WebDirect (SystemPlatform = 4)
+#    El usuario solicitó eliminar barras de herramientas en WebDirect.
+If [ Get ( SystemPlatform ) = 4 ]
+    # Ocultar todo en WebDirect
+    mostrar/ocultar barras de herramientas [ Incluir barra de registros ; Ocultar ]
+    mostrar/ocultar barra de menús [ Ocultar ]
+End If
+
+# 4. Carga de Variables Globales
+#    Ahora que estamos en la presentación "Ciclos", la referencia es 100% segura.
+Establecer variable [ $$Semestre ; Valor: Ciclo::Semestre Automatico ]
+#    Ahora sí vamos al Log de entrada
+Ir a la presentación [ "Log de entrada" (Log de entrada) ]
+
+Ejecutar guión [ "Fecha actual" ]
+
+# 5. Obtener Privilegios una vez para usar en condicionales
+Establecer variable [ $Privilegios ; Valor: Get ( AccountPrivilegeSetName ) ]
+
+# --- RAMA ALUMNOS ---
+If [ $Privilegios = "ALUMNOS" ]
+    # No es necesario pausar 0.1s en WebDirect, suele causar problemas de UI.
+    # Ya estamos en "Log de entrada" (paso 2).
+    Nuevo registro/petición
+    
+    Ejecutar guión [ "Validate user" ]
+    Ejecutar guión [ "Fechas de acceso alumnos" ]
+    
+    Salir del guión [ Resultado: 1 ]
+
+# --- RAMA PROFESORES ---
+Else If [ $Privilegios = "Profesores" ]
+    # Lógica de extracción de nombre
+    Establecer variable [ $Correo ; Valor: Get ( AccountName ) ]
+    Establecer variable [ $letrasencorreo ; Valor: Length ( $Correo ) ]
+    Establecer variable [ $$sincuentagoogle ; Valor: Left ( $Correo ; $letrasencorreo - 14 ) ]
+    
+    # Navegación y Creación
+    Ir a la presentación [ "Log de entrada" ]
+    Nuevo registro/petición
+    
+    Ejecutar guión [ "Fechas de acceso maestros" ]
+    
+    Salir del guión [ Resultado: 1 ]
+
+# --- RAMA ADMIN / FULL ACCESS ---
+Else If [ $Privilegios = "[Full Access]" or $Privilegios = "Administrativos" ]
+    
+    # Manejo de Barras de Herramientas
+    # En WebDirect: YA LAS OCULTAMOS en el paso 3.
+    # En Desktop (Pro/Go): Las mostramos si es necesario.
+    If [ Get ( SystemPlatform ) ≠ 4 ]
+        mostrar/ocultar barras de herramientas [ Mostrar ]
+    End If
+    
+    # Flujo de registro
+    Ir a la presentación [ "Log de entrada" ]
+    Nuevo registro/petición
+    
+    # Ir al Dashboard
+    Ir a la presentación [ "HOME ADMIN" (Fechas de ingreso y observacion de criterios) ]
+    
+    Salir del guión [ Resultado: 1 ]
+
+End If
+
+# Final por defecto para cualquier otro rol
+Salir del guión [ Resultado: 1 ]
