@@ -1,0 +1,26 @@
+## Script: Descargar Imagen/Archivo de Contenedor
+## Compatible: FileMaker Pro y WebDirect
+
+# 1. Validar que hay algo que descargar
+If [ IsEmpty ( Tabla::CampoContenedor ) ]
+    Mostrar cuadro de diálogo personalizado [ "Error" ; "No hay ninguna imagen cargada para descargar." ]
+    Salir del guión [ Resultado de texto: 0 ]
+End If
+
+# 2. Configuración de Variables (Opcional, para nombre de archivo)
+#    FileMaker suele usar el nombre del archivo guardado en el contenedor automáticamente.
+
+# 3. Exportar Contenido
+#    Este es el paso clave.
+#    - En Pro: Abrir el archivo "Automáticamente" puede ser molesto, mejor dejar que el usuario guarde.
+#    - En WebDirect: Esto fuerza la descarga en el navegador.
+
+Exportar contenido del campo [ Tabla::CampoContenedor ; Crear directorios: No ]
+
+# 4. Manejo de Errores (Si el usuario cancela)
+If [ Get ( LastError ) ≠ 0 ]
+    # El usuario canceló o hubo error de disco
+    Salir del guión [ Resultado de texto: 0 ]
+End If
+
+Salir del guión [ Resultado de texto: 1 ]
