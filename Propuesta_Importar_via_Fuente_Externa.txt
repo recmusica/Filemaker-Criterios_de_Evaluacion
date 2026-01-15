@@ -1,0 +1,37 @@
+## Script: Importar Maestros (Vía Fuente de Datos Externa)
+## Propósito: Importar datos usando una conexión FMNET directa, compatible con WebDirect.
+
+# --- PRE-REQUISITOS (Configuración Manual) ---
+# 1. Ve a Archivo > Gestionar > Fuentes de datos externas.
+# 2. Crea una nueva: 
+#    - Nombre: "Agenda_Profesores_DS"
+#    - Tipo: FileMaker
+#    - Ruta: fmnet:/localhost/Agenda Profesores Rec Musica.fmp12
+# 3. Ve a Archivo > Gestionar > Base de datos > Relaciones.
+# 4. Agrega una nueva Ocurrencia de Tabla (TO).
+#    - Fuente de datos: Selecciona "Agenda_Profesores_DS".
+#    - Tabla: Selecciona la tabla de maestros.
+#    - Nómbrala: "Maestros_Origen_Externo".
+
+# --- GUIÓN ---
+
+# 1. Preparar la tabla de destino
+Ir a la presentación [ "Maestros" (Maestros) ]
+Mostrar todos los registros
+Eliminar todos los registros [ Con diálogo: Inactivo ]
+
+# 2. Importar Registros (Usando la Tabla Origen, NO Archivo)
+#    Al configurar este paso:
+#    - Especificar fuente de datos: NO elijas archivo.
+#    - Elige "Tabla..." o "Ocurrencia de tabla...".
+#    - Selecciona "Maestros_Origen_Externo".
+#    - Mapea los campos correspondientes.
+Importar registros [ Con diálogo: Inactivo ; Tabla: Maestros ; Origen: "Maestros_Origen_Externo" ; Añadir; Mac Roman ]
+
+# 3. Filtrar Activos
+Modo Buscar [ Pausa: Desactivado ]
+Establecer campo [ Maestros::Activo Inactivo ; "Activo" ]
+Ejecutar búsqueda []
+
+# 4. Finalizar
+Salir del guión [ Resultado: 1 ]
